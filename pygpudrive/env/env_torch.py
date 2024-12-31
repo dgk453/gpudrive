@@ -33,13 +33,6 @@ class GPUDriveTorchEnv(GPUDriveGymEnv):
         backend="torch",
     ):
         # Initialization of environment configurations
-        self.config = config
-        self.scene_config = scene_config
-        self.num_worlds = scene_config.num_scenes
-        self.max_cont_agents = max_cont_agents
-        self.device = device
-        self.render_config = render_config
-        self.backend = backend
 
         # Environment parameter setup
         params = self._setup_environment_parameters()
@@ -120,7 +113,6 @@ class GPUDriveTorchEnv(GPUDriveGymEnv):
 
     def _apply_actions(self, actions):
         """Apply the actions to the simulator."""
-
         if (
             self.config.dynamics_model == "classic"
             or self.config.dynamics_model == "bicycle"
@@ -147,7 +139,8 @@ class GPUDriveTorchEnv(GPUDriveGymEnv):
 
         else:
             action_value_tensor = actions.to(self.device)
-
+       
+        
         # Feed the action values to gpudrive
         self._copy_actions_to_simulator(action_value_tensor)
 
@@ -393,10 +386,17 @@ class GPUDriveTorchEnv(GPUDriveGymEnv):
 
         lidar_obs = self._get_lidar_obs()
 
+        #
+        # obs = get_obs2(sim.get_obs())
+        # dataset.infos = obs
+        # 
+        # out = model(in)  //model we train with cmtr
+        # 
+
         obs_filtered = torch.cat(
             (
                 ego_states,
-                partner_observations,
+                partner_observations, 
                 road_map_observations,
                 lidar_obs,
             ),
