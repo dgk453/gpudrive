@@ -585,14 +585,6 @@ void Manager::reset(std::vector<int32_t> worldsToReset) {
     }
 
     impl_->reset();
-
-    if (impl_->renderMgr.has_value()) {
-        impl_->renderMgr->readECS();
-    }
-
-    if (impl_->cfg.enableBatchRenderer) {
-        impl_->renderMgr->batchRender();
-    }
 }
 
 void Manager::setMaps(const std::vector<std::string> &maps)
@@ -802,6 +794,13 @@ Tensor Manager::expertTrajectoryTensor() const {
     return impl_->exportTensor(
         ExportID::Trajectory, TensorElementType::Float32,
         {impl_->numWorlds, consts::kMaxAgentCount, TrajectoryExportSize});
+}
+
+Tensor Manager::metadataTensor() const {
+    return impl_->exportTensor(
+        ExportID::MetaData, TensorElementType::Int32,
+        {impl_->numWorlds, consts::kMaxAgentCount, MetaDataExportSize}
+    );
 }
 
 void Manager::triggerReset(int32_t world_idx)

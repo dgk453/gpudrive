@@ -55,6 +55,7 @@ void Sim::registerTypes(ECSRegistry &registry, const Config &cfg)
     registry.registerComponent<AgentID>();
     registry.registerComponent<RoadMapId>();
     registry.registerComponent<MapType>();
+    registry.registerComponent<MetaData>();
 
     registry.registerSingleton<WorldReset>();
     registry.registerSingleton<Shape>();
@@ -103,6 +104,8 @@ void Sim::registerTypes(ECSRegistry &registry, const Config &cfg)
         (uint32_t)ExportID::ResponseType);
     registry.exportColumn<AgentInterface, Trajectory>(
         (uint32_t)ExportID::Trajectory);
+    registry.exportColumn<AgentInterface, MetaData>(
+        (uint32_t)ExportID::MetaData);
 }
 
 static inline void cleanupWorld(Engine &ctx) {
@@ -665,6 +668,7 @@ inline void collectAbsoluteObservationsSystem(Engine &ctx,
     out.rotation.rotationFromAxis = utils::quatToYaw(rotation);
     out.goal = goal;
     out.vehicle_size = vehicleSize;
+    out.id = ctx.get<AgentID>(agent_iface.e).id;
 }
 
 void setupRestOfTasks(TaskGraphBuilder &builder, const Sim::Config &cfg,
@@ -767,7 +771,7 @@ void setupRestOfTasks(TaskGraphBuilder &builder, const Sim::Config &cfg,
         {clear_tmp});
 
     if (cfg.renderBridge) {
-        RenderingSystem::setupTasks(builder, {done_sys});
+        RenderingSystem::setupTasks(builder, dependencies);
     }
 
     TaskGraphNodeID lidar;
