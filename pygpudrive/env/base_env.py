@@ -183,6 +183,22 @@ class GPUDriveGymEnv(gym.Env, metaclass=abc.ABCMeta):
             else None,
         )
 
+        # --- Extend sim to expose an absolute self observation tensor ---
+        # This assumes that your C++ code exports the AbsoluteSelfObservation component
+        # using ExportID::AbsoluteSelfObservation.
+        # def abs_self_obs_tensor():
+        #     try:
+        #         # Retrieve the absolute self observation tensor via the exported column.
+        #         # Adjust this call if your Python API differs.
+        #         return sim.get_column(gpudrive.ExportID.AbsoluteSelfObservation).to_torch()
+        #     except Exception as e:
+        #         raise RuntimeError("Failed to retrieve abs_self_obs_tensor. "
+        #                         "Ensure that AbsoluteSelfObservation is properly exported in the simulator.") from e
+
+        # # Attach the method to the sim object.
+        # sim.abs_self_obs_tensor = abs_self_obs_tensor
+        # --- End extension ---
+
         return sim
 
     def _setup_rendering(self):

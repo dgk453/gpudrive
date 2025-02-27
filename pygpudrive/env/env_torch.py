@@ -14,6 +14,7 @@ from pygpudrive.datatypes.observation import (
     LocalEgoState,
     PartnerObs,
     LidarObs,
+    GlobalEgoState # Modified to get heading for mtr
 )
 from pygpudrive.datatypes.trajectory import LogTrajectory
 from pygpudrive.datatypes.roadgraph import LocalRoadGraphPoints
@@ -285,7 +286,7 @@ class GPUDriveTorchEnv(GPUDriveGymEnv):
             if self.config.norm_obs:
                 ego_state.normalize()
 
-            return (
+            local_state = (
                 torch.stack(
                     [
                         ego_state.speed,
@@ -300,7 +301,40 @@ class GPUDriveTorchEnv(GPUDriveGymEnv):
                 .to(self.device)
             )
         else:
-            return torch.Tensor().to(self.device)
+            local_state = torch.Tensor().to(self.device)
+        '''
+        Modifications to include globalegostate so that we can get heading for mtr
+        '''
+        # Optionally, get the global ego state if configured.
+        
+        # Use the absolute self observation tensor to create GlobalEgoState.
+        global_state_obj = GlobalEgoState.from_tensor(
+            abs_self_obs_tensor=self.sim.abs_self_obs_tensor(),
+            backend=self.backend,
+        )
+        # Optionally, one can call a normalize method if desired.
+        # For example, global_state_obj.restore_mean(mean_x, mean_y) if needed.
+        global_state = (
+            torch.cat(
+                [
+                    global_state_obj.pos_x.unsqueeze(-1),
+                    global_state_obj.pos_y.unsqueeze(-1),
+                    global_state_obj.pos_z.unsqueeze(-1),
+                    global_state_obj.rotation_as_quaternion,  # 4 values
+                    global_state_obj.rotation_angle.unsqueeze(-1),
+                    global_state_obj.goal_x.unsqueeze(-1),
+                    global_state_obj.goal_y.unsqueeze(-1),
+                    global_state_obj.vehicle_length.unsqueeze(-1),
+                    global_state_obj.vehicle_width.unsqueeze(-1),
+                    global_state_obj.vehicle_height.unsqueeze(-1),
+                    global_state_obj.id.unsqueeze(-1)
+                ],
+                dim=-1
+            )
+            .to(self.device)
+        )
+
+        return {"local": local_state, "global": global_state}
 
     def _get_partner_obs(self):
         """Get partner observations."""
@@ -397,6 +431,8 @@ class GPUDriveTorchEnv(GPUDriveGymEnv):
         """
 
         ego_states = self._get_ego_state()
+        # Modified get_ego_state code to return a dict {"local": ..., "global": ...}
+        local_ego = ego_states["local"]
 
         partner_observations = self._get_partner_obs()
 
@@ -406,7 +442,7 @@ class GPUDriveTorchEnv(GPUDriveGymEnv):
 
         obs_filtered = torch.cat(
             (
-                ego_states,
+                local_ego,
                 partner_observations,
                 road_map_observations,
                 lidar_obs,
