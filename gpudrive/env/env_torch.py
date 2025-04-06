@@ -750,7 +750,7 @@ class GPUDriveTorchEnv(GPUDriveGymEnv):
         ego_states = self._get_ego_state(mask)
         partner_observations = self._get_partner_obs(mask)
         road_map_observations = self._get_road_map_obs(mask)
-        lidar_observations = self._get_lidar_obs(mask)
+        # lidar_observations = self._get_lidar_obs(mask)
 
         obs = torch.cat(
             (
