@@ -10,7 +10,7 @@ backend-path = ["external/madrona/py"]
 wheel-directory = "build"
 
 [project]
-name = "gpudrive"
+name = "madrona_gpudrive"
 version = "0.3.0"
 authors = [
     {name = "Saman Kazemkheni", email = "skazemkhani@gmail.com"},

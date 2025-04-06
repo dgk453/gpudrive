@@ -5,8 +5,8 @@ import imageio
 import logging
 import argparse
 
-from pygpudrive.env.config import EnvConfig, RenderConfig, SceneConfig
-from pygpudrive.env.env_torch import GPUDriveTorchEnv
+from gpudrive.env.config import EnvConfig, RenderConfig, SceneConfig
+from gpudrive.env.env_torch import GPUDriveTorchEnv
 
 logging.getLogger(__name__)
 
@@ -149,6 +149,8 @@ def generate_state_action_pairs(
 
     dead_agent_mask = ~env.cont_agent_mask.clone()
     alive_agent_mask = env.cont_agent_mask.clone()
+
+    print("Number of time steps: " + str(env.episode_len))
     for time_step in range(env.episode_len):
 
         # Step the environment with inferred expert actions
@@ -157,7 +159,10 @@ def generate_state_action_pairs(
         next_obs = env.get_obs()
 
         dones = env.get_dones()
-        infos = env.get_infos()
+        # infos = env.get_()
+
+        # print("obs shape: ") 
+        # print(next_obs.shape)
 
         # Unpack and store (obs, action, next_obs, dones) pairs for controlled agents
         expert_observations_lst.append(obs[~dead_agent_mask, :])
@@ -180,18 +185,18 @@ def generate_state_action_pairs(
         if (dead_agent_mask == True).all():
             break
 
-    is_collision = infos[:, :, :3].sum(dim=-1)
-    is_goal = infos[:, :, 3]
-    collision_mask = is_collision != 0
-    goal_mask = is_goal != 0
-    valid_collision_mask = collision_mask & alive_agent_mask
-    valid_goal_mask = goal_mask & alive_agent_mask
-    collision_rate = (
-        valid_collision_mask.sum().float() / alive_agent_mask.sum().float()
-    )
-    goal_rate = valid_goal_mask.sum().float() / alive_agent_mask.sum().float()
+    # is_collision = infos[:, :, :3].sum(dim=-1)
+    # is_goal = infos[:, :, 3]
+    # collision_mask = is_collision != 0
+    # goal_mask = is_goal != 0
+    # valid_collision_mask = collision_mask & alive_agent_mask
+    # valid_goal_mask = goal_mask & alive_agent_mask
+    # collision_rate = (
+    #     valid_collision_mask.sum().float() / alive_agent_mask.sum().float()
+    # )
+    # goal_rate = valid_goal_mask.sum().float() / alive_agent_mask.sum().float()
 
-    print(f"Collision {collision_rate} Goal {goal_rate}")
+    # print(f"Collision {collision_rate} Goal {goal_rate}")
 
     if make_video:
         for render in range(render_index[0], render_index[1]):
@@ -206,13 +211,25 @@ def generate_state_action_pairs(
     flat_next_expert_obs = torch.cat(expert_next_obs_lst, dim=0)
     flat_expert_dones = torch.cat(expert_dones_lst, dim=0)
 
+    # print(expert_observations_lst[0].shape)
+    # print(expert_actions_lst[0].shape)
+    # print(expert_next_obs_lst[0].shape)
+    # print(expert_dones_lst[0].shape)
+    # print(flat_expert_obs.shape)
+    # print(flat_expert_actions.shape)
+    # print(flat_next_expert_obs.shape)
+    # print(flat_expert_dones.shape)
+    # print(expert_actions_lst.shape)
+    # print(expert_next_obs_lst.shape)
+    # print(expert_dones_lst.shape)
+
     return (
         flat_expert_obs,
         flat_expert_actions,
         flat_next_expert_obs,
         flat_expert_dones,
-        goal_rate,
-        collision_rate,
+        # goal_rate,
+        # collision_rate,
     )
 
 
